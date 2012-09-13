@@ -448,7 +448,30 @@ static int  vhc_create_shm_segment_(apr_pool_t *pool, apr_shm_t **shm,
                                    VHC_LOC, (long int) shm_size,
                                    gs_num_configs);
 
-   /*  Create a shm segment using the apr routines.  */
+   /*  First check if the shm segment exists and try cleaning it up.  */
+   status = apr_shm_attach(shm, (const char *) shmfile, pool);
+   VHC_DEBUG  vhc_debug_log_(pool, "%s: OLD shm attach check returned %d",
+                                   VHC_LOC, status);
+
+   if (VHC_APR_STATUS_IS_SUCCESS(status) ) {
+      /*  Have an shm segment (since attach worked).  */
+      ap_log_perror(APLOG_MARK, APLOG_WARNING, status, pool,
+                    "%s: existing/old shm - file=%s, destroying it",
+                    VHC_MODULE_NAME, shmfile);
+
+      status = apr_shm_destroy(*shm);
+      VHC_DEBUG  vhc_debug_log_(pool, "%s: OLD shm destroy returned %d",
+                                      VHC_LOC, status);
+
+      if (!VHC_APR_STATUS_IS_SUCCESS(status) )
+         ap_log_perror(APLOG_MARK, APLOG_ERR, status, pool,
+                       "%s: Failed to destroy existing/old shm",
+                       VHC_MODULE_NAME);
+
+   }  /*  If there's an existing/old shm segment.  */
+
+
+   /*  Now create a shm segment using the apr routines.  */
    status = apr_shm_create(shm, shm_size, (const char *) shmfile, pool);
    VHC_DEBUG  vhc_debug_log_(pool, "%s: shm create returned %d",
                                    VHC_LOC, status);
@@ -923,7 +946,8 @@ static apr_status_t  vhc_req_pool_cleanup_(void *arg) {
    void                 *data;
    VHC_shm_data_t       *vhost_data;
 
-   VHC_DEBUG  vhc_debug_log_(pool, "%s: CALLBACK log txn", VHC_LOC);
+   VHC_DEBUG  vhc_debug_log_(pool, "%s: CALLBACK req pool cleanup",
+                                   VHC_LOC);
 
    cfg = ap_get_module_config(req->server->module_config,
                               &vhost_choke_module);
