@@ -108,3 +108,6 @@ is only granted once every hour (FlapPeriod is 60 minutes).
     </VirtualHost>
 
 
+License
+-------
+The MIT License - see LICENSE file for more details.
