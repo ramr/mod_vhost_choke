@@ -28,7 +28,7 @@ Configuration
 
 These configuration directives are global and apply to the entire
 environment (across virtual hosts).
-Sample:  mod_vhost_choke.conf
+Sample:  mod_vhost_choke.conf.sample
 
     VHostChokeDebug  { On | Off } 
        -  Turns developer debug messages ON/OFF (default is Off)
